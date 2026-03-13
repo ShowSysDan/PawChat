@@ -11,8 +11,20 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <!-- Highlight.js -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+<link id="hljs-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<!-- Apply saved theme before first paint to prevent flash -->
+<script>
+(function(){
+  var t = localStorage.getItem('pawchat-theme') || 'dark';
+  document.documentElement.dataset.theme = t;
+  if (t === 'light') {
+    document.getElementById('hljs-theme').href =
+      'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css';
+  }
+})();
+</script>
 
 <!-- Marked (Markdown parser) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
@@ -48,6 +60,27 @@
   --font-ui:      'Sora', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
   --transition:   .15s ease;
+}
+
+/* ── LIGHT THEME OVERRIDES ── */
+[data-theme="light"] {
+  --bg:           #f5f7fa;
+  --bg-surface:   #ffffff;
+  --bg-card:      #f0f4f8;
+  --bg-hover:     #e8eef5;
+  --bg-active:    #dce8f5;
+  --border:       #d0dae5;
+  --border-light: #c0cdd8;
+  --accent:       #1a7fe8;
+  --accent-dim:   #dbeafe;
+  --accent-glow:  rgba(26,127,232,.12);
+  --text:         #1c2b3a;
+  --text-muted:   #546e87;
+  --text-faint:   #9ab0c4;
+  --user-bg:      #dbeafe;
+  --user-border:  #93c5fd;
+  --ai-bg:        #ffffff;
+  --code-bg:      #f6f8fa;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -855,6 +888,94 @@ html, body {
   transform: translateY(0);
   opacity: 1;
 }
+
+/* ── THEME TOGGLE ── */
+#theme-toggle {
+  margin-left: 4px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-muted);
+  padding: 4px 7px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+#theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── SIDEBAR SEARCH ── */
+#conv-search {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 10px 7px 30px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+#conv-search:focus { border-color: var(--accent); }
+#conv-search::placeholder { color: var(--text-faint); }
+.search-wrap {
+  position: relative;
+  margin-top: 8px;
+}
+.search-wrap svg {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-faint);
+  pointer-events: none;
+}
+#conv-search { margin-top: 0; }
+
+/* ── MESSAGE COPY BUTTON ── */
+.msg-bubble { position: relative; }
+.msg-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-faint);
+  padding: 3px 7px;
+  font-size: 11px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--transition), color var(--transition);
+}
+.msg-bubble:hover .msg-copy-btn { opacity: 1; }
+.msg-copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── INLINE RENAME ── */
+#chat-title.editable { cursor: text; }
+#chat-title.editable:not(.placeholder):hover { text-decoration: underline dotted var(--text-faint); }
+#title-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--accent);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  width: 100%;
+  max-width: 380px;
+  padding: 0 2px;
+}
 </style>
 </head>
 <body>
@@ -871,11 +992,16 @@ html, body {
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Models
         </a>
+        <button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
       </div>
       <button id="btn-new-chat" onclick="newChat()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New Conversation
       </button>
+      <div class="search-wrap">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="conv-search" type="search" placeholder="Search conversations…" oninput="renderConvList(this.value)" autocomplete="off">
+      </div>
     </div>
 
     <div id="conv-list">
@@ -902,7 +1028,7 @@ html, body {
 
     <!-- Header -->
     <div id="chat-header">
-      <div id="chat-title" class="placeholder">Select or start a conversation</div>
+      <div id="chat-title" class="placeholder editable" onclick="startRename()" title="Click to rename">Select or start a conversation</div>
       <div class="model-select-wrap">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
         <select id="model-select" onchange="onModelChange()">
@@ -969,16 +1095,36 @@ let state = {
   generating: false,
   abortController: null,
   models: [],
+  monitorInterval: null,
 };
+
+/* ═══════════════════════════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════════════════════════ */
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('pawchat-theme', next);
+  document.getElementById('hljs-theme').href = next === 'light'
+    ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css'
+    : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css';
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = document.documentElement.dataset.theme === 'dark' ? '🌙' : '☀️';
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════════ */
 async function init() {
+  updateThemeIcon();
   setupMarked();
   await Promise.all([loadModels(), loadConversations(), refreshMonitor()]);
   // Poll model monitor every 8 seconds
-  setInterval(refreshMonitor, 8000);
+  state.monitorInterval = setInterval(refreshMonitor, 8000);
 }
 
 function setupMarked() {
@@ -1098,17 +1244,26 @@ async function refreshMonitor() {
    CONVERSATIONS
 ═══════════════════════════════════════════════════════════════════ */
 async function loadConversations() {
-  const res = await fetch('/api/conversations');
-  state.conversations = await res.json();
-  renderConvList();
+  try {
+    const res = await fetch('/api/conversations');
+    state.conversations = await res.json();
+    renderConvList();
+  } catch {
+    toast('Could not load conversations — is the server running?');
+  }
 }
 
-function renderConvList() {
+function renderConvList(filter = '') {
   const list = document.getElementById('conv-list');
-  const empty = document.getElementById('conv-empty-msg');
 
-  if (state.conversations.length === 0) {
-    list.innerHTML = '<div class="no-models-msg" id="conv-empty-msg">No conversations yet</div>';
+  let convs = state.conversations;
+  if (filter) {
+    const q = filter.toLowerCase();
+    convs = convs.filter(c => c.title.toLowerCase().includes(q));
+  }
+
+  if (convs.length === 0) {
+    list.innerHTML = `<div class="no-models-msg">${filter ? 'No matches' : 'No conversations yet'}</div>`;
     return;
   }
 
@@ -1119,7 +1274,7 @@ function renderConvList() {
   const yestStr = yest.toDateString();
 
   const groups = { Today: [], Yesterday: [], Older: [] };
-  state.conversations.forEach(c => {
+  convs.forEach(c => {
     const d = new Date(c.updated_at).toDateString();
     if (d === todayStr) groups.Today.push(c);
     else if (d === yestStr) groups.Yesterday.push(c);
@@ -1154,8 +1309,10 @@ async function selectConversation(id) {
 
   const conv = state.conversations.find(c => c.id === id);
   if (conv) {
-    document.getElementById('chat-title').textContent = conv.title;
-    document.getElementById('chat-title').classList.remove('placeholder');
+    const titleEl = document.getElementById('chat-title');
+    titleEl.textContent = conv.title;
+    titleEl.classList.remove('placeholder');
+    titleEl.classList.add('editable');
     document.getElementById('model-select').value = conv.model || 'llama3.2';
   }
 
@@ -1230,13 +1387,14 @@ async function sendMessage() {
   const model = document.getElementById('model-select').value;
 
   // Create streaming assistant bubble
-  const { row, content } = appendMessage('assistant', '', true);
+  const { row, content, bubble } = appendMessage('assistant', '', true);
   const cursor = document.createElement('span');
   cursor.className = 'typing-cursor';
   content.appendChild(cursor);
   scrollToBottom();
 
   let buffer = '';
+  let reader = null;
 
   try {
     const res = await fetch('/api/chat', {
@@ -1250,11 +1408,12 @@ async function sendMessage() {
       signal: state.abortController.signal,
     });
 
-    const reader = res.body.getReader();
+    reader = res.body.getReader();
     const decoder = new TextDecoder();
     let partial = '';
+    let streamDone = false;
 
-    while (true) {
+    while (!streamDone) {
       const { done, value } = await reader.read();
       if (done) break;
 
@@ -1270,6 +1429,7 @@ async function sendMessage() {
         if (payload.error) {
           cursor.remove();
           content.innerHTML = `<div class="error-banner">⚠ ${escHtml(payload.error)}</div>`;
+          streamDone = true;
           break;
         }
 
@@ -1277,6 +1437,7 @@ async function sendMessage() {
           buffer += payload.token;
           // Render markdown on the fly
           content.innerHTML = renderMarkdown(buffer);
+          bubble.dataset.raw = buffer;
           content.appendChild(cursor);
           scrollToBottom();
         }
@@ -1284,6 +1445,7 @@ async function sendMessage() {
         if (payload.done) {
           cursor.remove();
           content.innerHTML = renderMarkdown(buffer);
+          bubble.dataset.raw = buffer;
           // Update conversation in state
           if (payload.conversation) {
             const idx = state.conversations.findIndex(c => c.id === payload.conversation.id);
@@ -1292,6 +1454,7 @@ async function sendMessage() {
             renderConvList();
             document.getElementById('chat-title').textContent = payload.conversation.title;
           }
+          streamDone = true;
           break;
         }
       }
@@ -1304,12 +1467,13 @@ async function sendMessage() {
       cursor.remove();
       if (buffer) content.innerHTML = renderMarkdown(buffer);
     }
+  } finally {
+    if (reader) reader.cancel().catch(() => {});
+    state.generating = false;
+    state.abortController = null;
+    toggleSendStop(false);
+    scrollToBottom();
   }
-
-  state.generating = false;
-  state.abortController = null;
-  toggleSendStop(false);
-  scrollToBottom();
 }
 
 function stopGeneration() {
@@ -1333,6 +1497,7 @@ function appendMessage(role, content, streaming) {
 
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
+  if (!streaming && content) bubble.dataset.raw = content;
 
   const contentEl = document.createElement('div');
   contentEl.className = 'msg-content';
@@ -1341,7 +1506,15 @@ function appendMessage(role, content, streaming) {
     contentEl.innerHTML = role === 'assistant' ? renderMarkdown(content) : escHtml(content);
   }
 
+  // Copy button (hidden until hover via CSS)
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'msg-copy-btn';
+  copyBtn.title = 'Copy message';
+  copyBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+  copyBtn.onclick = () => copyMessage(bubble, copyBtn);
+
   bubble.appendChild(contentEl);
+  bubble.appendChild(copyBtn);
 
   if (role === 'assistant') {
     row.appendChild(avatar);
@@ -1352,7 +1525,7 @@ function appendMessage(role, content, streaming) {
   }
 
   container.appendChild(row);
-  return { row, content: contentEl };
+  return { row, content: contentEl, bubble };
 }
 
 function renderMarkdown(text) {
@@ -1362,7 +1535,7 @@ function renderMarkdown(text) {
 function copyArtifact(id, btn) {
   const el = document.getElementById(id);
   if (!el) return;
-  navigator.clipboard.writeText(el.innerText).then(() => {
+  navigator.clipboard.writeText(el.textContent).then(() => {
     btn.classList.add('copied');
     btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
     setTimeout(() => {
@@ -1370,6 +1543,56 @@ function copyArtifact(id, btn) {
       btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
     }, 2000);
   });
+}
+
+function copyMessage(bubble, btn) {
+  const text = bubble.dataset.raw || bubble.querySelector('.msg-content')?.innerText || '';
+  navigator.clipboard.writeText(text).then(() => {
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    setTimeout(() => {
+      btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+    }, 2000);
+  }).catch(() => toast('Could not copy to clipboard'));
+}
+
+function startRename() {
+  if (!state.activeConvId) return;
+  const titleEl = document.getElementById('chat-title');
+  if (titleEl.classList.contains('placeholder')) return;
+  const oldTitle = titleEl.textContent;
+
+  const input = document.createElement('input');
+  input.id = 'title-input';
+  input.type = 'text';
+  input.value = oldTitle;
+  titleEl.textContent = '';
+  titleEl.appendChild(input);
+  input.focus();
+  input.select();
+
+  async function save() {
+    const newTitle = input.value.trim() || oldTitle;
+    titleEl.textContent = newTitle;
+    titleEl.classList.add('editable');
+    if (newTitle !== oldTitle) {
+      try {
+        await fetch(`/api/conversations/${state.activeConvId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: newTitle }),
+        });
+        const idx = state.conversations.findIndex(c => c.id === state.activeConvId);
+        if (idx !== -1) { state.conversations[idx].title = newTitle; renderConvList(); }
+        toast('Conversation renamed');
+      } catch { toast('Could not save title'); titleEl.textContent = oldTitle; }
+    }
+  }
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { titleEl.textContent = oldTitle; titleEl.classList.add('editable'); }
+  });
+  input.addEventListener('blur', save);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
