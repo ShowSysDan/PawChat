@@ -7,6 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Apply saved theme before first paint to prevent flash -->
+<script>
+(function(){
+  var t = localStorage.getItem('pawchat-theme') || 'dark';
+  document.documentElement.dataset.theme = t;
+})();
+</script>
 <style>
 :root {
   --bg:           #0b0f14;
@@ -37,6 +44,44 @@
   --radius:       10px;
   --radius-sm:    6px;
 }
+
+/* ── LIGHT THEME OVERRIDES ── */
+[data-theme="light"] {
+  --bg:           #f5f7fa;
+  --bg-surface:   #ffffff;
+  --bg-card:      #f0f4f8;
+  --bg-hover:     #e8eef5;
+  --bg-active:    #dce8f5;
+  --border:       #1f2d3d;
+  --border-light: #c0cdd8;
+  --accent:       #1a7fe8;
+  --accent-dim:   #dbeafe;
+  --accent-glow:  rgba(26,127,232,.12);
+  --green-dim:    rgba(21,128,61,.12);
+  --red-dim:      rgba(185,28,28,.12);
+  --yellow-dim:   rgba(161,98,7,.12);
+  --purple-dim:   rgba(109,40,217,.12);
+  --text:         #1c2b3a;
+  --text-muted:   #546e87;
+  --text-faint:   #9ab0c4;
+}
+
+/* ── THEME TOGGLE ── */
+#theme-toggle {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  padding: 5px 9px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  transition: all var(--transition);
+  margin-left: 8px;
+}
+#theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-ui); font-size: 14px; line-height: 1.6; }
@@ -771,6 +816,7 @@ nav {
     <div class="status-dot" id="nav-status-dot"></div>
     <span id="nav-status-text">Checking…</span>
   </div>
+  <button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
 </nav>
 
 <!-- PAGE -->
@@ -960,13 +1006,30 @@ let allModels    = [];
 let runningModels = [];
 let drawerModel  = null;
 let pullAbort    = null;
+let monitorInterval = null;
+
+/* ═══════════════════════════════════════════════════════
+   THEME
+═══════════════════════════════════════════════════════ */
+function toggleTheme() {
+  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('pawchat-theme', next);
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = document.documentElement.dataset.theme === 'dark' ? '🌙' : '☀️';
+}
 
 /* ═══════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════ */
 async function init() {
+  updateThemeIcon();
   await refreshAll();
-  setInterval(refreshRunning, 8000);
+  monitorInterval = setInterval(refreshRunning, 8000);
 }
 
 async function refreshAll() {
@@ -977,14 +1040,17 @@ async function refreshAll() {
    OLLAMA STATUS
 ═══════════════════════════════════════════════════════ */
 async function checkStatus() {
+  const dot  = document.getElementById('nav-status-dot');
+  const text = document.getElementById('nav-status-text');
   try {
     const r = await fetch('/api/ollama/status');
     const d = await r.json();
-    const dot  = document.getElementById('nav-status-dot');
-    const text = document.getElementById('nav-status-text');
     dot.classList.toggle('offline', !d.online);
     text.textContent = d.online ? 'Ollama online' : 'Ollama offline';
-  } catch {}
+  } catch {
+    dot.classList.add('offline');
+    text.textContent = 'Ollama offline';
+  }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -997,7 +1063,9 @@ async function refreshRunning() {
     runningModels = d.models || [];
     renderRunning();
     updateStats();
-  } catch {}
+  } catch (e) {
+    console.error('refreshRunning:', e);
+  }
 }
 
 function renderRunning() {
