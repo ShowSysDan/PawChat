@@ -33,9 +33,9 @@ class Database:
                     "psycopg2 is not installed. Run: pip install psycopg2-binary"
                 )
         else:
-            conn = sqlite3.connect(self.db_url)
+            conn = sqlite3.connect(self.db_url, timeout=15)
             conn.row_factory = sqlite3.Row
-            # Enable WAL mode for better concurrent read performance
+            # WAL mode allows concurrent reads alongside writes
             conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("PRAGMA foreign_keys=ON")
             return conn
