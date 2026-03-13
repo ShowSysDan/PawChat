@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Models — Ollama Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           #0b0f14;
+  --bg-surface:   #111720;
+  --bg-card:      #161e29;
+  --bg-hover:     #1c2634;
+  --bg-active:    #1e2f42;
+  --border:       #1f2d3d;
+  --border-light: #263545;
+  --accent:       #3b9eff;
+  --accent-dim:   #1e4a7a;
+  --accent-glow:  rgba(59,158,255,.15);
+  --green:        #3ddc84;
+  --green-dim:    rgba(61,220,132,.12);
+  --red:          #ff5f6d;
+  --red-dim:      rgba(255,95,109,.12);
+  --yellow:       #f6c90e;
+  --yellow-dim:   rgba(246,201,14,.12);
+  --purple:       #a78bfa;
+  --purple-dim:   rgba(167,139,250,.12);
+  --text:         #cdd9e5;
+  --text-muted:   #6b7f92;
+  --text-faint:   #3d5166;
+  --font-ui:      'Sora', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --nav-h:        56px;
+  --transition:   .15s ease;
+  --radius:       10px;
+  --radius-sm:    6px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-ui); font-size: 14px; line-height: 1.6; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 99px; }
+
+/* ── NAV ── */
+nav {
+  height: var(--nav-h);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  margin-right: 32px;
+}
+
+.nav-logo-icon {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--accent), #6a3fff);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.nav-logo-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.nav-logo-text span { color: var(--accent); }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), color var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link:hover { background: var(--bg-hover); color: var(--text); }
+.nav-link.active { background: var(--bg-active); color: #fff; }
+
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse 2s infinite;
+}
+.status-dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+
+/* ── PAGE LAYOUT ── */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 20px;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #e6f0ff;
+  letter-spacing: -.3px;
+}
+
+.page-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── STATS STRIP ── */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.stat-icon.blue   { background: var(--accent-glow); }
+.stat-icon.green  { background: var(--green-dim); }
+.stat-icon.purple { background: var(--purple-dim); }
+.stat-icon.yellow { background: var(--yellow-dim); }
+
+.stat-val { font-size: 22px; font-weight: 700; color: #e6f0ff; line-height: 1; }
+.stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; letter-spacing: .3px; text-transform: uppercase; }
+
+/* ── PULL BAR ── */
+.pull-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.section-title-icon {
+  width: 20px; height: 20px;
+  border-radius: 5px;
+  background: var(--accent-glow);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+
+.pull-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pull-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.pull-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.pull-input::placeholder { color: var(--text-faint); }
+
+.btn {
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-primary:hover:not(:disabled) { background: #5aadff; }
+.btn-primary:disabled { background: var(--bg-hover); color: var(--text-faint); border-color: var(--border); cursor: not-allowed; }
+
+.btn-ghost {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+.btn-ghost:hover { background: var(--bg-active); color: var(--text); border-color: var(--border-light); }
+
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: rgba(255,95,109,.2);
+}
+.btn-danger:hover { background: rgba(255,95,109,.22); }
+
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* quick-pull chips */
+.quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.qchip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.qchip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+/* pull progress */
+#pull-progress-wrap {
+  display: none;
+  margin-top: 14px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.progress-status {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.progress-pct {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #6a3fff);
+  border-radius: 99px;
+  transition: width .4s ease;
+}
+
+/* ── RUNNING MODELS ── */
+.running-section {
+  margin-bottom: 28px;
+}
+
+.running-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.running-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.running-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--green), #00c8a0);
+}
+
+.rmc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.rmc-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.rmc-live {
+  font-size: 10px;
+  background: var(--green-dim);
+  color: var(--green);
+  padding: 2px 7px;
+  border-radius: 99px;
+  border: 1px solid rgba(61,220,132,.2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rmc-live-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s infinite;
+}
+
+.rmc-meta {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.rmc-badge {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+}
+
+.rmc-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.rmc-bar-label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+
+.rmc-bar-track {
+  flex: 1;
+  height: 5px;
+  background: var(--bg);
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.rmc-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), #00c8a0);
+  border-radius: 99px;
+  transition: width .5s ease;
+}
+
+.rmc-actions { display: flex; gap: 6px; }
+
+/* ── LOCAL MODELS TABLE ── */
+.local-section { }
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.search-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-faint);
+}
+
+.search-input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px 8px 32px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text-faint); }
+
+.models-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.models-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  color: var(--text-faint);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.models-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.models-table tr:last-child td { border-bottom: none; }
+
+.models-table tr:hover td { background: var(--bg-hover); }
+
+.model-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.model-icon {
+  width: 32px; height: 32px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent-dim), #1a1545);
+  border: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.model-name { font-family: var(--font-mono); font-size: 13px; color: var(--text); font-weight: 500; }
+.model-tag  { font-size: 10px; color: var(--text-faint); font-family: var(--font-mono); margin-top: 1px; }
+
+.size-cell { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+
+.family-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.family-llama   { background: rgba(59,158,255,.12); color: var(--accent); border: 1px solid rgba(59,158,255,.2); }
+.family-gemma   { background: rgba(246,201,14,.1); color: var(--yellow); border: 1px solid rgba(246,201,14,.2); }
+.family-mistral { background: rgba(167,139,250,.12); color: var(--purple); border: 1px solid rgba(167,139,250,.2); }
+.family-phi     { background: rgba(61,220,132,.1); color: var(--green); border: 1px solid rgba(61,220,132,.2); }
+.family-other   { background: var(--bg-hover); color: var(--text-muted); border: 1px solid var(--border); }
+
+.loaded-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--green);
+  background: var(--green-dim);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid rgba(61,220,132,.2);
+}
+
+.not-loaded {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.actions-cell { display: flex; gap: 6px; align-items: center; }
+
+/* ── MODEL DETAIL DRAWER ── */
+#detail-drawer {
+  display: none;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 460px;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 40px rgba(0,0,0,.5);
+  z-index: 200;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#detail-drawer.open { display: flex; animation: slideIn .2s ease; }
+@keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.drawer-model-icon {
+  width: 40px; height: 40px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent-dim), #1a1545);
+  border: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+.drawer-name { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--text); }
+.drawer-tag  { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+.drawer-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color var(--transition), background var(--transition);
+}
+.drawer-close:hover { color: var(--text); background: var(--bg-hover); }
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.detail-section { margin-bottom: 20px; }
+.detail-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.detail-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+}
+.detail-item-label { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+.detail-item-val { font-size: 13px; font-family: var(--font-mono); color: var(--text); }
+
+.detail-modelfile {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+.drawer-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── EMPTY / LOADING STATES ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.empty-state-icon { font-size: 36px; opacity: .4; }
+.empty-state-text { font-size: 13px; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-hover) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 4px;
+}
+
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text);
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  transform: translateY(10px);
+  opacity: 0;
+  transition: all .25s ease;
+  pointer-events: none;
+  z-index: 300;
+  max-width: 360px;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.error { border-color: rgba(255,95,109,.3); color: #ff8a94; }
+
+/* ── CONFIRM DIALOG ── */
+#confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  z-index: 400;
+  align-items: center;
+  justify-content: center;
+}
+#confirm-overlay.open { display: flex; }
+.confirm-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+.confirm-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.confirm-body  { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+.confirm-btns  { display: flex; gap: 8px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-icon">🦙</div>
+    <div class="nav-logo-text">Ollama <span>Chat</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="/" class="nav-link">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Chat
+    </a>
+    <a href="/models" class="nav-link active">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Models
+    </a>
+  </div>
+  <div class="nav-status">
+    <div class="status-dot" id="nav-status-dot"></div>
+    <span id="nav-status-text">Checking…</span>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">Model Manager</div>
+      <div class="page-sub">Download, load, unload, and inspect your local Ollama models</div>
+    </div>
+    <button class="btn btn-ghost" onclick="refreshAll()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="stat-card">
+      <div class="stat-icon blue">📦</div>
+      <div>
+        <div class="stat-val" id="stat-local">—</div>
+        <div class="stat-lbl">Local Models</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">⚡</div>
+      <div>
+        <div class="stat-val" id="stat-running">—</div>
+        <div class="stat-lbl">In VRAM</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon purple">💾</div>
+      <div>
+        <div class="stat-val" id="stat-size">—</div>
+        <div class="stat-lbl">Total Disk</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon yellow">🔥</div>
+      <div>
+        <div class="stat-val" id="stat-vram">—</div>
+        <div class="stat-lbl">VRAM Used</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pull section -->
+  <div class="pull-section">
+    <div class="section-title">
+      <div class="section-title-icon">⬇</div>
+      Pull a Model
+    </div>
+    <div class="pull-row">
+      <input type="text" class="pull-input" id="pull-input"
+        placeholder="Model name, e.g. llama3.2 or mistral:7b or qwen2.5-coder:14b"
+        onkeydown="if(event.key==='Enter') startPull()">
+      <button class="btn btn-primary" id="pull-btn" onclick="startPull()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+        Pull
+      </button>
+    </div>
+
+    <!-- Quick suggestions -->
+    <div class="quick-chips">
+      <span style="font-size:10px;color:var(--text-faint);align-self:center;margin-right:2px">Popular:</span>
+      <div class="qchip" onclick="setPull('llama3.2')">llama3.2</div>
+      <div class="qchip" onclick="setPull('llama3.2:1b')">llama3.2:1b</div>
+      <div class="qchip" onclick="setPull('llama3.1:8b')">llama3.1:8b</div>
+      <div class="qchip" onclick="setPull('mistral')">mistral</div>
+      <div class="qchip" onclick="setPull('mistral-nemo')">mistral-nemo</div>
+      <div class="qchip" onclick="setPull('gemma3:4b')">gemma3:4b</div>
+      <div class="qchip" onclick="setPull('gemma3:12b')">gemma3:12b</div>
+      <div class="qchip" onclick="setPull('qwen2.5-coder:7b')">qwen2.5-coder:7b</div>
+      <div class="qchip" onclick="setPull('qwen2.5-coder:14b')">qwen2.5-coder:14b</div>
+      <div class="qchip" onclick="setPull('deepseek-r1:8b')">deepseek-r1:8b</div>
+      <div class="qchip" onclick="setPull('phi4')">phi4</div>
+      <div class="qchip" onclick="setPull('phi4-mini')">phi4-mini</div>
+      <div class="qchip" onclick="setPull('nomic-embed-text')">nomic-embed-text</div>
+      <div class="qchip" onclick="setPull('codellama:13b')">codellama:13b</div>
+    </div>
+
+    <!-- Progress -->
+    <div id="pull-progress-wrap">
+      <div class="progress-info">
+        <span class="progress-status" id="pull-status-text">Initialising…</span>
+        <span class="progress-pct" id="pull-pct-text">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="pull-progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Running models -->
+  <div class="running-section">
+    <div class="section-title" style="margin-bottom:14px">
+      <div class="section-title-icon">⚡</div>
+      Loaded in VRAM
+    </div>
+    <div id="running-grid" class="running-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon">💤</div>
+        <div class="empty-state-text">No models currently loaded in memory</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Local models table -->
+  <div class="local-section">
+    <div class="table-toolbar">
+      <div class="section-title" style="margin-bottom:0">
+        <div class="section-title-icon">📦</div>
+        Local Models
+      </div>
+      <div class="search-wrap" style="max-width:260px">
+        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="search-input" id="model-search" placeholder="Filter models…" oninput="filterModels()">
+      </div>
+    </div>
+    <table class="models-table" id="models-table">
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Family</th>
+          <th>Size</th>
+          <th>Params</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="models-tbody">
+        <tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">🔄</div><div class="empty-state-text">Loading…</div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div><!-- /page -->
+
+<!-- Detail Drawer -->
+<div id="detail-drawer">
+  <div class="drawer-header">
+    <div class="drawer-model-icon">🦙</div>
+    <div>
+      <div class="drawer-name" id="drawer-name">Model Name</div>
+      <div class="drawer-tag" id="drawer-tag">tag</div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    <div class="empty-state"><div class="empty-state-icon">🔄</div><div class="empty-state-text">Loading details…</div></div>
+  </div>
+  <div class="drawer-footer">
+    <button class="btn btn-primary" id="drawer-load-btn" onclick="drawerLoad()">
+      ⚡ Load into VRAM
+    </button>
+    <button class="btn btn-ghost" id="drawer-unload-btn" onclick="drawerUnload()" style="display:none">
+      💤 Unload
+    </button>
+    <button class="btn btn-danger btn-sm" id="drawer-delete-btn" onclick="drawerDelete()" style="margin-left:auto">
+      🗑 Delete
+    </button>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">Are you sure?</div>
+    <div class="confirm-body" id="confirm-body">This action cannot be undone.</div>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+let allModels    = [];
+let runningModels = [];
+let drawerModel  = null;
+let pullAbort    = null;
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+async function init() {
+  await refreshAll();
+  setInterval(refreshRunning, 8000);
+}
+
+async function refreshAll() {
+  await Promise.all([checkStatus(), loadModels(), refreshRunning()]);
+}
+
+/* ═══════════════════════════════════════════════════════
+   OLLAMA STATUS
+═══════════════════════════════════════════════════════ */
+async function checkStatus() {
+  try {
+    const r = await fetch('/api/ollama/status');
+    const d = await r.json();
+    const dot  = document.getElementById('nav-status-dot');
+    const text = document.getElementById('nav-status-text');
+    dot.classList.toggle('offline', !d.online);
+    text.textContent = d.online ? 'Ollama online' : 'Ollama offline';
+  } catch {}
+}
+
+/* ═══════════════════════════════════════════════════════
+   RUNNING MODELS
+═══════════════════════════════════════════════════════ */
+async function refreshRunning() {
+  try {
+    const r = await fetch('/api/models/running');
+    const d = await r.json();
+    runningModels = d.models || [];
+    renderRunning();
+    updateStats();
+  } catch {}
+}
+
+function renderRunning() {
+  const grid = document.getElementById('running-grid');
+  if (!runningModels.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💤</div><div class="empty-state-text">No models currently loaded in memory</div></div>`;
+    return;
+  }
+  grid.innerHTML = runningModels.map(m => {
+    const sizeVram  = m.size_vram || 0;
+    const sizeTotal = m.size || sizeVram || 1;
+    const pct = Math.round((sizeVram / sizeTotal) * 100);
+    const vramGB  = (sizeVram / 1e9).toFixed(2);
+    const totalGB = (sizeTotal / 1e9).toFixed(2);
+    const expires = m.expires_at ? new Date(m.expires_at).toLocaleTimeString() : '—';
+    return `
+<div class="running-card">
+  <div class="rmc-header">
+    <div class="rmc-name">${esc(m.name)}</div>
+    <div class="rmc-live"><div class="rmc-live-dot"></div> LIVE</div>
+  </div>
+  <div class="rmc-meta">
+    <span class="rmc-badge">VRAM ${vramGB}GB</span>
+    <span class="rmc-badge">Total ${totalGB}GB</span>
+    <span class="rmc-badge">Expires ${esc(expires)}</span>
+  </div>
+  <div class="rmc-bar-row">
+    <div class="rmc-bar-label">VRAM</div>
+    <div class="rmc-bar-track">
+      <div class="rmc-bar-fill" style="width:${pct}%"></div>
+    </div>
+    <div class="rmc-bar-label">${pct}%</div>
+  </div>
+  <div class="rmc-actions">
+    <button class="btn btn-ghost btn-sm" onclick="unloadModel('${esc(m.name)}')">💤 Unload</button>
+    <button class="btn btn-ghost btn-sm" onclick="openDrawer('${esc(m.name)}')">Details</button>
+  </div>
+</div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOCAL MODELS
+═══════════════════════════════════════════════════════ */
+async function loadModels() {
+  try {
+    const r = await fetch('/api/models');
+    const d = await r.json();
+    allModels = d.models || [];
+    renderModels(allModels);
+    updateStats();
+  } catch {
+    document.getElementById('models-tbody').innerHTML =
+      `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">⚠</div><div class="empty-state-text">Could not load models — is Ollama running?</div></div></td></tr>`;
+  }
+}
+
+function filterModels() {
+  const q = document.getElementById('model-search').value.toLowerCase();
+  renderModels(q ? allModels.filter(m => m.name.toLowerCase().includes(q)) : allModels);
+}
+
+function renderModels(models) {
+  const tbody = document.getElementById('models-tbody');
+  if (!models.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No local models found. Pull one above!</div></div></td></tr>`;
+    return;
+  }
+
+  const runningNames = new Set(runningModels.map(m => m.name));
+
+  tbody.innerHTML = models.map(m => {
+    const nameParts = m.name.split(':');
+    const baseName = nameParts[0];
+    const tag = nameParts[1] || 'latest';
+    const sizeGB = m.size ? (m.size / 1e9).toFixed(2) + ' GB' : '—';
+    const family = (m.details?.family || '').toLowerCase();
+    const params = m.details?.parameter_size || '—';
+    const quant  = m.details?.quantization_level || '';
+    const isLoaded = runningNames.has(m.name);
+    const icon = modelIcon(family);
+
+    const familyClass = family.includes('llama') ? 'family-llama'
+                      : family.includes('gemma')  ? 'family-gemma'
+                      : family.includes('mistral')? 'family-mistral'
+                      : family.includes('phi')    ? 'family-phi'
+                      : 'family-other';
+
+    const familyLabel = m.details?.family || 'unknown';
+
+    const statusHtml = isLoaded
+      ? `<span class="loaded-indicator"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block"></span> Loaded</span>`
+      : `<span class="not-loaded">—</span>`;
+
+    return `
+<tr id="row-${safeId(m.name)}">
+  <td>
+    <div class="model-name-cell">
+      <div class="model-icon">${icon}</div>
+      <div>
+        <div class="model-name">${esc(baseName)}</div>
+        <div class="model-tag">${esc(tag)}${quant ? ' · ' + esc(quant) : ''}</div>
+      </div>
+    </div>
+  </td>
+  <td><span class="family-badge ${familyClass}">${esc(familyLabel)}</span></td>
+  <td class="size-cell">${esc(sizeGB)}</td>
+  <td class="size-cell">${esc(params)}</td>
+  <td>${statusHtml}</td>
+  <td class="actions-cell">
+    ${isLoaded
+      ? `<button class="btn btn-ghost btn-sm" onclick="unloadModel('${esc(m.name)}')">💤 Unload</button>`
+      : `<button class="btn btn-ghost btn-sm" onclick="loadModel('${esc(m.name)}')">⚡ Load</button>`
+    }
+    <button class="btn btn-ghost btn-sm" onclick="openDrawer('${esc(m.name)}')">Details</button>
+    <button class="btn btn-danger btn-sm" onclick="confirmDelete('${esc(m.name)}')">🗑</button>
+  </td>
+</tr>`;
+  }).join('');
+}
+
+function updateStats() {
+  document.getElementById('stat-local').textContent = allModels.length;
+  document.getElementById('stat-running').textContent = runningModels.length;
+
+  const totalDisk = allModels.reduce((s, m) => s + (m.size || 0), 0);
+  document.getElementById('stat-size').textContent = totalDisk
+    ? (totalDisk / 1e9).toFixed(1) + ' GB' : '0 GB';
+
+  const totalVram = runningModels.reduce((s, m) => s + (m.size_vram || 0), 0);
+  document.getElementById('stat-vram').textContent = totalVram
+    ? (totalVram / 1e9).toFixed(1) + ' GB' : '0 GB';
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOAD / UNLOAD
+═══════════════════════════════════════════════════════ */
+async function loadModel(name) {
+  toast(`Loading ${name}…`);
+  try {
+    const r = await fetch('/api/models/load', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, keep_alive: '10m' }),
+    });
+    const d = await r.json();
+    if (d.error) { toast(d.error, true); return; }
+    toast(`${name} loaded into VRAM ⚡`);
+    await refreshRunning();
+    renderModels(allModels);
+  } catch (e) { toast(String(e), true); }
+}
+
+async function unloadModel(name) {
+  toast(`Unloading ${name}…`);
+  try {
+    const r = await fetch('/api/models/unload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const d = await r.json();
+    if (d.error) { toast(d.error, true); return; }
+    toast(`${name} unloaded from VRAM`);
+    await refreshRunning();
+    renderModels(allModels);
+    if (drawerModel === name) updateDrawerLoadBtn();
+  } catch (e) { toast(String(e), true); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PULL
+═══════════════════════════════════════════════════════ */
+function setPull(name) {
+  document.getElementById('pull-input').value = name;
+  document.getElementById('pull-input').focus();
+}
+
+async function startPull() {
+  const name = document.getElementById('pull-input').value.trim();
+  if (!name) return;
+
+  document.getElementById('pull-btn').disabled = true;
+  document.getElementById('pull-progress-wrap').style.display = 'block';
+  setPullProgress('Connecting…', 0);
+
+  try {
+    const resp = await fetch('/api/models/pull', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let partial = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      partial += decoder.decode(value, { stream: true });
+      const lines = partial.split('\n');
+      partial = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        let payload;
+        try { payload = JSON.parse(line.slice(6)); } catch { continue; }
+
+        if (payload.error) {
+          toast(payload.error, true);
+          resetPull();
+          return;
+        }
+
+        setPullProgress(payload.status || '…', payload.pct || 0);
+
+        if (payload.done) {
+          toast(`${name} downloaded successfully! 🎉`);
+          resetPull();
+          await loadModels();
+          return;
+        }
+      }
+    }
+  } catch (e) {
+    toast(String(e), true);
+    resetPull();
+  }
+}
+
+function setPullProgress(status, pct) {
+  document.getElementById('pull-status-text').textContent = status;
+  document.getElementById('pull-pct-text').textContent = pct + '%';
+  document.getElementById('pull-progress-fill').style.width = pct + '%';
+}
+
+function resetPull() {
+  document.getElementById('pull-btn').disabled = false;
+  setTimeout(() => {
+    document.getElementById('pull-progress-wrap').style.display = 'none';
+    setPullProgress('Initialising…', 0);
+  }, 2000);
+}
+
+/* ═══════════════════════════════════════════════════════
+   DELETE
+═══════════════════════════════════════════════════════ */
+function confirmDelete(name) {
+  document.getElementById('confirm-title').textContent = 'Delete model?';
+  document.getElementById('confirm-body').innerHTML =
+    `This will permanently remove <code style="font-family:var(--font-mono);background:var(--bg-card);padding:1px 5px;border-radius:3px">${esc(name)}</code> from your system. This cannot be undone.`;
+  document.getElementById('confirm-ok-btn').onclick = () => { closeConfirm(); deleteModel(name); };
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+}
+
+async function deleteModel(name) {
+  try {
+    const r = await fetch(`/api/models/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.error) { toast(d.error, true); return; }
+    toast(`${name} deleted`);
+    allModels = allModels.filter(m => m.name !== name);
+    renderModels(allModels);
+    updateStats();
+    if (drawerModel === name) closeDrawer();
+  } catch (e) { toast(String(e), true); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   DETAIL DRAWER
+═══════════════════════════════════════════════════════ */
+async function openDrawer(name) {
+  drawerModel = name;
+  const nameParts = name.split(':');
+  document.getElementById('drawer-name').textContent = nameParts[0];
+  document.getElementById('drawer-tag').textContent = nameParts[1] || 'latest';
+  document.getElementById('drawer-body').innerHTML =
+    `<div class="empty-state"><div class="empty-state-icon">🔄</div><div class="empty-state-text">Loading…</div></div>`;
+  document.getElementById('detail-drawer').classList.add('open');
+
+  updateDrawerLoadBtn();
+
+  try {
+    const r = await fetch('/api/models/show', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const d = await r.json();
+    if (d.error) {
+      document.getElementById('drawer-body').innerHTML =
+        `<div class="empty-state"><div class="empty-state-icon">⚠</div><div class="empty-state-text">${esc(d.error)}</div></div>`;
+      return;
+    }
+    renderDrawer(d);
+  } catch (e) {
+    document.getElementById('drawer-body').innerHTML =
+      `<div class="empty-state"><div class="empty-state-icon">⚠</div><div class="empty-state-text">${esc(String(e))}</div></div>`;
+  }
+}
+
+function updateDrawerLoadBtn() {
+  if (!drawerModel) return;
+  const isLoaded = runningModels.some(m => m.name === drawerModel);
+  document.getElementById('drawer-load-btn').style.display   = isLoaded ? 'none' : 'flex';
+  document.getElementById('drawer-unload-btn').style.display = isLoaded ? 'flex' : 'none';
+}
+
+function renderDrawer(data) {
+  const details = data.details || {};
+  const info = data.model_info || {};
+  const mfile = data.modelfile || '';
+  const template = data.template || '';
+  const params = data.parameters || '';
+
+  const items = [
+    { label: 'Family',         val: details.family || info['general.architecture'] || '—' },
+    { label: 'Parameters',     val: details.parameter_size || '—' },
+    { label: 'Quantisation',   val: details.quantization_level || '—' },
+    { label: 'Format',         val: details.format || '—' },
+    { label: 'Context Length', val: info['llm.context_length'] || details.context_length || '—' },
+    { label: 'Embedding Size', val: info['llm.embedding_length'] || '—' },
+  ].filter(i => i.val !== '—');
+
+  let html = `
+<div class="detail-section">
+  <div class="detail-section-title">Model Details</div>
+  <div class="detail-grid">
+    ${items.map(i => `
+    <div class="detail-item">
+      <div class="detail-item-label">${esc(i.label)}</div>
+      <div class="detail-item-val">${esc(String(i.val))}</div>
+    </div>`).join('')}
+  </div>
+</div>`;
+
+  if (template) {
+    html += `
+<div class="detail-section">
+  <div class="detail-section-title">Prompt Template</div>
+  <div class="detail-modelfile">${esc(template)}</div>
+</div>`;
+  }
+
+  if (params) {
+    html += `
+<div class="detail-section">
+  <div class="detail-section-title">Default Parameters</div>
+  <div class="detail-modelfile">${esc(params)}</div>
+</div>`;
+  }
+
+  if (mfile) {
+    // strip the embedded weights FROM block — too noisy
+    const cleaned = mfile.replace(/FROM .+/, 'FROM <weights>').slice(0, 1200);
+    html += `
+<div class="detail-section">
+  <div class="detail-section-title">Modelfile</div>
+  <div class="detail-modelfile">${esc(cleaned)}${mfile.length > 1200 ? '\n…' : ''}</div>
+</div>`;
+  }
+
+  document.getElementById('drawer-body').innerHTML = html;
+  updateDrawerLoadBtn();
+}
+
+function closeDrawer() {
+  document.getElementById('detail-drawer').classList.remove('open');
+  drawerModel = null;
+}
+
+async function drawerLoad() {
+  if (!drawerModel) return;
+  await loadModel(drawerModel);
+  updateDrawerLoadBtn();
+}
+
+async function drawerUnload() {
+  if (!drawerModel) return;
+  await unloadModel(drawerModel);
+  updateDrawerLoadBtn();
+}
+
+function drawerDelete() {
+  if (!drawerModel) return;
+  confirmDelete(drawerModel);
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════ */
+function modelIcon(family) {
+  if (family.includes('llama'))   return '🦙';
+  if (family.includes('gemma'))   return '💎';
+  if (family.includes('mistral')) return '🌬';
+  if (family.includes('phi'))     return 'Φ';
+  if (family.includes('qwen'))    return '🐉';
+  if (family.includes('deepseek'))return '🔬';
+  if (family.includes('code'))    return '</>';
+  return '🤖';
+}
+
+function safeId(name) { return name.replace(/[^a-z0-9]/gi, '_'); }
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function toast(msg, error = false, duration = 3000) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (error ? ' error' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), duration);
+}
+
+/* close drawer on overlay click */
+document.addEventListener('click', e => {
+  const drawer = document.getElementById('detail-drawer');
+  if (drawer.classList.contains('open') && !drawer.contains(e.target)) {
+    // only close if not clicking a table action button
+    if (!e.target.closest('button')) closeDrawer();
+  }
+});
+
+init();
+</script>
+</body>
+</html>
