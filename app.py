@@ -7,6 +7,9 @@ Run:  python app.py
 import json
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import requests
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 
