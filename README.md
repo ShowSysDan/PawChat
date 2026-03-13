@@ -1,6 +1,6 @@
-# 🦙 Ollama Chat
+# 🐾 PawChat
 
-A polished, self-hosted chat interface for [Ollama](https://ollama.ai/) — built with Flask, streamed responses, syntax-highlighted code artifacts, and a real-time model load monitor.
+A polished, self-hosted chat interface for [Ollama](https://ollama.ai/) — built with Flask, streamed responses, syntax-highlighted code artifacts, a real-time system load monitor, per-chat context/files, and web search.
 
 ---
 
