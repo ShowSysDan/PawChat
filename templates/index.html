@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ollama Chat</title>
+<title>PawChat</title>
 
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -286,6 +286,41 @@ html, body {
   background: var(--bg-card);
 }
 
+/* system stats (CPU / RAM) */
+.sys-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sys-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sys-stat-label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.sys-stat-val {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 52px;
+  text-align: right;
+}
+
 .monitor-header {
   display: flex;
   align-items: center;
@@ -396,6 +431,227 @@ html, body {
   padding: 6px 0;
   font-style: italic;
 }
+
+/* background-generating spinner badge on sidebar items */
+.conv-generating-badge {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border: 1.5px solid var(--accent);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Conversation settings panel ─── */
+#conv-settings-panel {
+  display: none;
+  position: fixed;
+  top: 0; right: 0;
+  width: 320px;
+  height: 100vh;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border);
+  z-index: 200;
+  overflow-y: auto;
+  padding: 20px 16px;
+  box-sizing: border-box;
+}
+
+#conv-settings-panel.open { display: flex; flex-direction: column; gap: 18px; }
+
+.settings-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.settings-panel-close {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color var(--transition);
+}
+
+.settings-panel-close:hover { color: var(--red); }
+
+.settings-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+
+.settings-textarea {
+  width: 100%;
+  min-height: 90px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 8px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.settings-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.settings-toggle-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* toggle switch */
+.toggle-switch {
+  position: relative;
+  width: 32px; height: 18px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-hover);
+  border-radius: 99px;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+.toggle-slider:before {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  left: 3px; top: 3px;
+  background: var(--text-faint);
+  border-radius: 50%;
+  transition: transform .2s, background .2s;
+}
+
+.toggle-switch input:checked + .toggle-slider { background: var(--accent-dim); }
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(14px);
+  background: var(--accent);
+}
+
+/* files list */
+.file-list { display: flex; flex-direction: column; gap: 6px; }
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+}
+
+.file-item-name {
+  flex: 1;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-item-del {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 3px;
+  transition: color var(--transition);
+  flex-shrink: 0;
+}
+
+.file-item-del:hover { color: var(--red); }
+
+.file-add-btn {
+  margin-top: 6px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 7px;
+  width: 100%;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.file-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* gear button in chat header */
+#conv-settings-btn {
+  position: relative;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 4px 7px;
+  font-size: 13px;
+  transition: color var(--transition), border-color var(--transition);
+  display: none;
+}
+
+#conv-settings-btn.active { display: flex; align-items: center; gap: 4px; }
+#conv-settings-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+.settings-badge {
+  font-size: 9px;
+  background: var(--accent);
+  color: #000;
+  border-radius: 99px;
+  padding: 0 4px;
+  font-weight: 700;
+  line-height: 14px;
+}
+
+/* web search indicator in input footer */
+#web-search-indicator {
+  display: none;
+  font-size: 10px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+#web-search-indicator.visible { display: inline; }
 
 /* ═══════════════════════════════════════════════════════════════════
    MAIN CHAT AREA
@@ -987,12 +1243,13 @@ html, body {
     <div class="sidebar-header">
       <div class="logo-row">
         <div class="logo-icon">🦙</div>
-        <div class="logo-text">Ollama <span>Chat</span></div>
+        <div class="logo-text">Paw<span>Chat</span></div>
         <a href="/models" title="Manage Models" style="margin-left:auto;background:var(--bg-hover);border:1px solid var(--border);border-radius:5px;color:var(--text-muted);padding:4px 8px;text-decoration:none;font-size:11px;display:flex;align-items:center;gap:4px;transition:all .15s ease" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)'">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Models
         </a>
         <button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+        <button onclick="toggleAppSettings()" title="App settings" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;transition:color var(--transition)" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-faint)'">⚙</button>
       </div>
       <button id="btn-new-chat" onclick="newChat()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1013,10 +1270,28 @@ html, body {
       <div class="monitor-header">
         <div class="monitor-title">
           <div class="status-dot" id="ollama-status-dot"></div>
-          GPU / MODEL LOAD
+          SYSTEM MONITOR
         </div>
         <button id="monitor-refresh" onclick="refreshMonitor()" title="Refresh">↻</button>
       </div>
+      <!-- CPU / RAM stats -->
+      <div class="sys-stats" id="sys-stats">
+        <div class="sys-stat-row">
+          <span class="sys-stat-label">CPU</span>
+          <div class="rmc-bar-track" style="flex:1">
+            <div class="rmc-bar-fill" id="cpu-bar" style="width:0%"></div>
+          </div>
+          <span class="sys-stat-val" id="cpu-val">—</span>
+        </div>
+        <div class="sys-stat-row">
+          <span class="sys-stat-label">RAM</span>
+          <div class="rmc-bar-track" style="flex:1">
+            <div class="rmc-bar-fill" id="ram-bar" style="width:0%;background:linear-gradient(90deg,var(--green),#1a9e5c)"></div>
+          </div>
+          <span class="sys-stat-val" id="ram-val">—</span>
+        </div>
+      </div>
+      <!-- Running models (VRAM) -->
       <div id="running-models-list">
         <div class="no-models-msg">No models loaded</div>
       </div>
@@ -1035,14 +1310,18 @@ html, body {
           <option value="llama3.2">llama3.2</option>
         </select>
       </div>
+      <button id="conv-settings-btn" onclick="toggleSettingsPanel()" title="Conversation settings">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span id="settings-file-badge" class="settings-badge" style="display:none"></span>
+      </button>
     </div>
 
     <!-- Messages -->
     <div id="messages">
       <!-- empty state shown when no conversation selected -->
       <div id="empty-state">
-        <div class="empty-logo">🦙</div>
-        <div class="empty-title">Welcome to Ollama Chat</div>
+        <div class="empty-logo">🐾</div>
+        <div class="empty-title">Welcome to PawChat</div>
         <div class="empty-sub">Start a new conversation or select one from the sidebar. Your local AI is ready.</div>
         <div class="empty-chips">
           <div class="chip" onclick="quickPrompt('Explain quantum computing in simple terms')">Explain quantum computing</div>
@@ -1073,6 +1352,7 @@ html, body {
       </div>
       <div class="input-footer">
         <span class="input-hint" id="input-hint">Select a conversation to begin</span>
+        <span id="web-search-indicator">🔍 web search on</span>
         <button id="stop-btn" onclick="stopGeneration()">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
           Stop
@@ -1081,6 +1361,78 @@ html, body {
     </div>
 
   </main>
+</div>
+
+<!-- Conversation settings panel (slide-in from right) -->
+<div id="conv-settings-panel">
+  <div class="settings-panel-header">
+    <span class="settings-panel-title">Conversation Settings</span>
+    <button class="settings-panel-close" onclick="toggleSettingsPanel()">×</button>
+  </div>
+
+  <div>
+    <div class="settings-section-label">System Prompt</div>
+    <textarea id="settings-system-prompt" class="settings-textarea"
+      placeholder="e.g. You are a senior Python engineer. Always use type hints."
+      onblur="saveSystemPrompt()"></textarea>
+  </div>
+
+  <div>
+    <div class="settings-toggle-row">
+      <span class="settings-toggle-label">🔍 Web Search</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="settings-web-search" onchange="saveWebSearch()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div style="font-size:10px;color:var(--text-faint);margin-top:4px;">
+      Injects DuckDuckGo results as context before each reply.
+    </div>
+  </div>
+
+  <div>
+    <div class="settings-section-label">Attached Files</div>
+    <div class="file-list" id="settings-file-list"></div>
+    <button class="file-add-btn" onclick="document.getElementById('file-upload-input').click()">
+      + Attach file or image
+    </button>
+    <input type="file" id="file-upload-input" style="display:none"
+      accept="text/*,.txt,.md,.csv,.json,.yaml,.yml,.py,.js,.ts,.html,.css,.sh,.xml,image/*"
+      onchange="uploadFile(this)">
+  </div>
+</div>
+
+<!-- App-wide settings panel (syslog etc.) -->
+<div id="app-settings-panel" style="display:none;position:fixed;top:0;left:220px;width:300px;height:100vh;background:var(--bg-surface);border-right:1px solid var(--border);z-index:200;overflow-y:auto;padding:20px 16px;box-sizing:border-box;flex-direction:column;gap:18px">
+  <div class="settings-panel-header">
+    <span class="settings-panel-title">⚙ App Settings</span>
+    <button class="settings-panel-close" onclick="toggleAppSettings()">×</button>
+  </div>
+
+  <div>
+    <div class="settings-section-label">Syslog</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div>
+        <div style="font-size:10px;color:var(--text-faint);margin-bottom:3px">Server host / IP</div>
+        <input type="text" id="syslog-host" placeholder="e.g. 192.168.1.100 or logs.example.com"
+          style="width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:7px 8px;box-sizing:border-box"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text-faint);margin-bottom:3px">Port (default 514)</div>
+        <input type="number" id="syslog-port" placeholder="514" min="1" max="65535"
+          style="width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:7px 8px;box-sizing:border-box"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div style="font-size:10px;color:var(--text-faint)">
+        Sends structured UDP syslog events: chat messages, responses, errors, startup.
+      </div>
+      <button onclick="saveAppSettings()" style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:var(--radius-sm);color:var(--accent);cursor:pointer;font-size:12px;padding:7px;transition:background var(--transition)" onmouseover="this.style.background='var(--accent)';this.style.color='#000'" onmouseout="this.style.background='var(--accent-dim)';this.style.color='var(--accent)'">
+        Save Settings
+      </button>
+      <div id="syslog-status" style="font-size:10px;color:var(--text-faint)"></div>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -1092,10 +1444,12 @@ html, body {
 let state = {
   conversations: [],
   activeConvId: null,
-  generating: false,
+  generating: false,          // true only when the *active* conv is streaming
   abortController: null,
   models: [],
   monitorInterval: null,
+  activeGenerations: {},      // { convId: { reader, buffer, abortController } }
+  pendingReloads: new Set(),  // convIds that finished generating in background
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1123,8 +1477,8 @@ async function init() {
   updateThemeIcon();
   setupMarked();
   await Promise.all([loadModels(), loadConversations(), refreshMonitor()]);
-  // Poll model monitor every 8 seconds
-  state.monitorInterval = setInterval(refreshMonitor, 8000);
+  // Poll monitor every 5 seconds
+  state.monitorInterval = setInterval(refreshMonitor, 5000);
 }
 
 function setupMarked() {
@@ -1200,6 +1554,25 @@ async function refreshMonitor() {
   const dot = document.getElementById('ollama-status-dot');
   const list = document.getElementById('running-models-list');
 
+  // Fetch system stats (CPU/RAM) independently — always available
+  try {
+    const sysRes = await fetch('/api/system/stats');
+    const sys = await sysRes.json();
+    const cpuBar = document.getElementById('cpu-bar');
+    const cpuVal = document.getElementById('cpu-val');
+    const ramBar = document.getElementById('ram-bar');
+    const ramVal = document.getElementById('ram-val');
+    if (cpuBar) {
+      cpuBar.style.width = sys.cpu_percent + '%';
+      cpuVal.textContent = sys.cpu_percent.toFixed(0) + '%';
+    }
+    if (ramBar) {
+      ramBar.style.width = sys.ram_percent + '%';
+      ramVal.textContent = sys.ram_used_gb + '/' + sys.ram_total_gb + 'GB';
+    }
+  } catch {}
+
+  // Fetch Ollama status + running models
   try {
     const [statusRes, runningRes] = await Promise.all([
       fetch('/api/ollama/status'),
@@ -1220,17 +1593,16 @@ async function refreshMonitor() {
       const sizeVram = m.size_vram || 0;
       const sizeTotal = m.size || sizeVram || 1;
       const pct = Math.round((sizeVram / sizeTotal) * 100);
-      const vramGB = (sizeVram / 1e9).toFixed(2);
-      const totalGB = (sizeTotal / 1e9).toFixed(2);
+      const memGB = (sizeTotal / 1e9).toFixed(2);
       const shortName = m.name.split(':')[0];
       return `
 <div class="running-model-card">
   <div class="rmc-name" title="${m.name}">${shortName}</div>
   <div class="rmc-bar-row">
     <div class="rmc-bar-track">
-      <div class="rmc-bar-fill" style="width:${pct}%"></div>
+      <div class="rmc-bar-fill" style="width:${Math.max(pct,4)}%"></div>
     </div>
-    <div class="rmc-size">${vramGB}GB VRAM</div>
+    <div class="rmc-size">${memGB}GB</div>
   </div>
 </div>`;
     }).join('');
@@ -1288,10 +1660,13 @@ function renderConvList(filter = '') {
     items.forEach(c => {
       const active = c.id === state.activeConvId ? ' active' : '';
       const modelShort = (c.model || '').split(':')[0].slice(0, 8);
+      const isGenerating = !!state.activeGenerations[c.id];
+      const genBadge = isGenerating ? '<span class="conv-generating-badge"></span>' : '';
       html += `
 <div class="conv-item${active}" onclick="selectConversation(${c.id})" id="conv-${c.id}">
   <span class="conv-icon">💬</span>
   <span class="conv-title" title="${escHtml(c.title)}">${escHtml(c.title)}</span>
+  ${genBadge}
   <span class="conv-model-badge">${escHtml(modelShort)}</span>
   <button class="conv-delete" onclick="deleteConv(event,${c.id})" title="Delete">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1303,7 +1678,11 @@ function renderConvList(filter = '') {
 }
 
 async function selectConversation(id) {
-  if (state.generating) return;
+  // If we're actively streaming for the CURRENT conv, move it to background
+  if (state.generating && state.activeConvId && state.activeConvId !== id) {
+    backgroundCurrentGeneration();
+  }
+
   state.activeConvId = id;
   renderConvList();
 
@@ -1316,8 +1695,32 @@ async function selectConversation(id) {
     document.getElementById('model-select').value = conv.model || 'llama3.2';
   }
 
+  // Show gear button for this conversation
+  document.getElementById('conv-settings-btn').classList.add('active');
+
   enableInput();
-  await loadMessages(id);
+
+  // If this conv finished generating in background, reload fresh messages
+  if (state.pendingReloads.has(id)) {
+    state.pendingReloads.delete(id);
+  }
+
+  // If currently generating in background for this conv, resume rendering
+  if (state.activeGenerations[id]) {
+    state.generating = true;
+    state.abortController = state.activeGenerations[id].abortController;
+    toggleSendStop(true);
+    // Messages will be showing; just indicate activity
+    await loadMessages(id);
+    // Generation is still running in background; it'll update when done
+  } else {
+    state.generating = false;
+    toggleSendStop(false);
+    await loadMessages(id);
+  }
+
+  // Load conversation settings into panel
+  loadSettingsPanel(conv);
 }
 
 async function loadMessages(convId) {
@@ -1373,6 +1776,7 @@ async function sendMessage() {
   const text = input.value.trim();
   if (!text || state.generating || !state.activeConvId) return;
 
+  const convId = state.activeConvId;
   input.value = '';
   autoResize(input);
 
@@ -1381,7 +1785,9 @@ async function sendMessage() {
   showEmptyState(false);
 
   state.generating = true;
-  state.abortController = new AbortController();
+  const controller = new AbortController();
+  state.abortController = controller;
+  state.activeGenerations[convId] = { abortController: controller, buffer: '' };
   toggleSendStop(true);
 
   const model = document.getElementById('model-select').value;
@@ -1400,12 +1806,8 @@ async function sendMessage() {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        conversation_id: state.activeConvId,
-        message: text,
-        model,
-      }),
-      signal: state.abortController.signal,
+      body: JSON.stringify({ conversation_id: convId, message: text, model }),
+      signal: controller.signal,
     });
 
     reader = res.body.getReader();
@@ -1416,6 +1818,14 @@ async function sendMessage() {
     while (!streamDone) {
       const { done, value } = await reader.read();
       if (done) break;
+
+      // If user has switched away, go to background drain
+      if (state.activeConvId !== convId) {
+        state.activeGenerations[convId].reader = reader;
+        state.activeGenerations[convId].partial = partial;
+        drainGeneration(convId);
+        return;
+      }
 
       partial += decoder.decode(value, { stream: true });
       const lines = partial.split('\n');
@@ -1435,7 +1845,7 @@ async function sendMessage() {
 
         if (payload.token) {
           buffer += payload.token;
-          // Render markdown on the fly
+          state.activeGenerations[convId].buffer = buffer;
           content.innerHTML = renderMarkdown(buffer);
           bubble.dataset.raw = buffer;
           content.appendChild(cursor);
@@ -1446,7 +1856,6 @@ async function sendMessage() {
           cursor.remove();
           content.innerHTML = renderMarkdown(buffer);
           bubble.dataset.raw = buffer;
-          // Update conversation in state
           if (payload.conversation) {
             const idx = state.conversations.findIndex(c => c.id === payload.conversation.id);
             if (idx !== -1) state.conversations[idx] = payload.conversation;
@@ -1468,16 +1877,81 @@ async function sendMessage() {
       if (buffer) content.innerHTML = renderMarkdown(buffer);
     }
   } finally {
-    if (reader) reader.cancel().catch(() => {});
-    state.generating = false;
-    state.abortController = null;
-    toggleSendStop(false);
-    scrollToBottom();
+    if (state.activeConvId === convId) {
+      if (reader) reader.cancel().catch(() => {});
+      state.generating = false;
+      state.abortController = null;
+      toggleSendStop(false);
+      scrollToBottom();
+    }
+    delete state.activeGenerations[convId];
+    renderConvList();
+  }
+}
+
+/** Move the current active generation to a background drain. */
+function backgroundCurrentGeneration() {
+  state.generating = false;
+  state.abortController = null;
+  toggleSendStop(false);
+}
+
+/** Continue draining an SSE stream in the background after the user switched away. */
+async function drainGeneration(convId) {
+  const gen = state.activeGenerations[convId];
+  if (!gen || !gen.reader) return;
+
+  const { reader } = gen;
+  let partial = gen.partial || '';
+
+  // Update sidebar to show spinner
+  renderConvList();
+
+  try {
+    const decoder = new TextDecoder();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      partial += decoder.decode(value, { stream: true });
+      const lines = partial.split('\n');
+      partial = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        let payload;
+        try { payload = JSON.parse(line.slice(6)); } catch { continue; }
+
+        if (payload.done || payload.error) {
+          // Generation finished in background
+          state.pendingReloads.add(convId);
+          if (payload.conversation) {
+            const idx = state.conversations.findIndex(c => c.id === payload.conversation.id);
+            if (idx !== -1) state.conversations[idx] = payload.conversation;
+            else state.conversations.unshift(payload.conversation);
+          }
+          delete state.activeGenerations[convId];
+          renderConvList();
+          return;
+        }
+      }
+    }
+  } catch {
+    // stream ended or errored
+  } finally {
+    delete state.activeGenerations[convId];
+    state.pendingReloads.add(convId);
+    renderConvList();
+    reader.cancel().catch(() => {});
   }
 }
 
 function stopGeneration() {
   if (state.abortController) state.abortController.abort();
+  const convId = state.activeConvId;
+  if (convId && state.activeGenerations[convId]) {
+    delete state.activeGenerations[convId];
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1493,7 +1967,7 @@ function appendMessage(role, content, streaming) {
 
   const avatar = document.createElement('div');
   avatar.className = 'msg-avatar';
-  avatar.textContent = role === 'user' ? '👤' : '🦙';
+  avatar.textContent = role === 'user' ? '👤' : '🐾';
 
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
@@ -1604,7 +2078,7 @@ function showEmptyState(show = true) {
   if (show && !es) {
     container.innerHTML = `
 <div id="empty-state">
-  <div class="empty-logo">🦙</div>
+  <div class="empty-logo">🐾</div>
   <div class="empty-title">Start the conversation</div>
   <div class="empty-sub">Type a message below to begin chatting with your local model.</div>
 </div>`;
@@ -1623,6 +2097,8 @@ function disableInput() {
   document.getElementById('message-input').disabled = true;
   document.getElementById('send-btn').disabled = true;
   document.getElementById('input-hint').textContent = 'Select a conversation to begin';
+  document.getElementById('conv-settings-btn').classList.remove('active');
+  document.getElementById('conv-settings-panel').classList.remove('open');
 }
 
 function toggleSendStop(generating) {
@@ -1689,6 +2165,166 @@ function toast(msg, duration = 2500) {
   el.textContent = msg;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), duration);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   APP SETTINGS PANEL (syslog etc.)
+═══════════════════════════════════════════════════════════════════ */
+async function toggleAppSettings() {
+  const panel = document.getElementById('app-settings-panel');
+  const isOpen = panel.style.display === 'flex';
+  if (!isOpen) {
+    panel.style.display = 'flex';
+    // Load current settings
+    try {
+      const res = await fetch('/api/settings');
+      const s = await res.json();
+      document.getElementById('syslog-host').value = s.syslog_host || '';
+      document.getElementById('syslog-port').value = s.syslog_port || '514';
+    } catch {}
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+async function saveAppSettings() {
+  const host = document.getElementById('syslog-host').value.trim();
+  const port = document.getElementById('syslog-port').value.trim() || '514';
+  const status = document.getElementById('syslog-status');
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ syslog_host: host, syslog_port: port }),
+    });
+    if (res.ok) {
+      status.textContent = host ? `✓ Syslog configured → ${host}:${port}` : '✓ Syslog disabled';
+      status.style.color = 'var(--green)';
+      toast('Settings saved');
+    } else {
+      status.textContent = 'Save failed';
+      status.style.color = 'var(--red)';
+    }
+  } catch (e) {
+    status.textContent = 'Error: ' + e.message;
+    status.style.color = 'var(--red)';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CONVERSATION SETTINGS PANEL
+═══════════════════════════════════════════════════════════════════ */
+function toggleSettingsPanel() {
+  const panel = document.getElementById('conv-settings-panel');
+  panel.classList.toggle('open');
+}
+
+function loadSettingsPanel(conv) {
+  if (!conv) return;
+  document.getElementById('settings-system-prompt').value = conv.system_prompt || '';
+  document.getElementById('settings-web-search').checked = !!conv.web_search_enabled;
+  updateWebSearchIndicator(!!conv.web_search_enabled);
+  loadFileList(conv.id);
+  updateSettingsBadge(conv.id);
+}
+
+async function saveSystemPrompt() {
+  if (!state.activeConvId) return;
+  const val = document.getElementById('settings-system-prompt').value;
+  await fetch(`/api/conversations/${state.activeConvId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system_prompt: val }),
+  });
+  const idx = state.conversations.findIndex(c => c.id === state.activeConvId);
+  if (idx !== -1) state.conversations[idx].system_prompt = val;
+}
+
+async function saveWebSearch() {
+  if (!state.activeConvId) return;
+  const checked = document.getElementById('settings-web-search').checked;
+  await fetch(`/api/conversations/${state.activeConvId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ web_search_enabled: checked }),
+  });
+  const idx = state.conversations.findIndex(c => c.id === state.activeConvId);
+  if (idx !== -1) state.conversations[idx].web_search_enabled = checked ? 1 : 0;
+  updateWebSearchIndicator(checked);
+}
+
+function updateWebSearchIndicator(on) {
+  const el = document.getElementById('web-search-indicator');
+  if (el) el.classList.toggle('visible', on);
+}
+
+async function loadFileList(convId) {
+  const list = document.getElementById('settings-file-list');
+  list.innerHTML = '';
+  try {
+    const res = await fetch(`/api/conversations/${convId}/files`);
+    const files = await res.json();
+    if (files.length === 0) {
+      list.innerHTML = '<div style="font-size:11px;color:var(--text-faint);text-align:center;padding:6px 0">No files attached</div>';
+    } else {
+      files.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        const isImg = f.mimetype.startsWith('image/');
+        item.innerHTML = `
+          <span style="font-size:14px">${isImg ? '🖼' : '📄'}</span>
+          <span class="file-item-name" title="${escHtml(f.filename)}">${escHtml(f.filename)}</span>
+          <button class="file-item-del" onclick="deleteFile(${f.id})" title="Remove">×</button>`;
+        list.appendChild(item);
+      });
+    }
+    updateSettingsBadge(convId, files.length);
+  } catch {}
+}
+
+async function deleteFile(fileId) {
+  if (!state.activeConvId) return;
+  await fetch(`/api/conversations/${state.activeConvId}/files/${fileId}`, { method: 'DELETE' });
+  loadFileList(state.activeConvId);
+  toast('File removed');
+}
+
+async function uploadFile(input) {
+  if (!state.activeConvId || !input.files.length) return;
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const res = await fetch(`/api/conversations/${state.activeConvId}/files`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      toast('Upload failed: ' + (err.error || res.status));
+    } else {
+      loadFileList(state.activeConvId);
+      toast('File attached: ' + file.name);
+    }
+  } catch (e) {
+    toast('Upload error: ' + e.message);
+  }
+  input.value = '';  // reset so same file can be re-uploaded
+}
+
+function updateSettingsBadge(convId, count) {
+  const badge = document.getElementById('settings-file-badge');
+  if (!badge) return;
+  if (count === undefined) {
+    // fetch count async
+    fetch(`/api/conversations/${convId}/files`).then(r => r.json()).then(files => {
+      badge.textContent = files.length;
+      badge.style.display = files.length > 0 ? 'inline' : 'none';
+    }).catch(() => {});
+    return;
+  }
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline' : 'none';
 }
 
 /* ═══════════════════════════════════════════════════════════════════
